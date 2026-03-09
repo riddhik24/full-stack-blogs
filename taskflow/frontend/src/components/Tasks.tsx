@@ -7,50 +7,56 @@ import { IoCheckmarkDoneCircleOutline } from "react-icons/io5";
 import { IoCheckmarkDoneCircle } from "react-icons/io5";
 import { MdCheck } from "react-icons/md";
 import { FcCancel } from "react-icons/fc";
+import { toast } from "react-toastify";
 
 const Tasks = () => {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState("");
   const [editId, setEditId] = useState(null);
-  const user = JSON.parse(localStorage.getItem("loggedInUser") || "");
+  const getUser = localStorage.getItem("loggedInUser");
+
+  const user = getUser ? JSON.parse(getUser) : null;
 
   const token = localStorage.getItem("token");
   // console.log(tasks);
   const navigate = useNavigate();
 
-  if (user === "") {
-    alert("Please login first");
+  if (!user) {
+    toast.error("Please login first");
     navigate("/login");
   }
-
-  const { id } = JSON.parse(localStorage.getItem("loggedInUser") || "null");
   const fetchTasks = async () => {
+    // const { id } = user;
     try {
-      const res = await axios.get("http://localhost:5000/tasks", {
-        params: { id: id },
-      });
-      setTasks(res.data);
+      const res = await axios.get(
+        `http://localhost:5000/api/tasks/${user.id}`,
+        {
+          params: { id: user?.id },
+        },
+      );
+      setTasks(res?.data?.data);
+      toast.success(res?.data?.message);
+      // console.log(res?.data?.data);
     } catch (err) {
       console.error(err);
     }
   };
 
-  useEffect(() => {
-    fetchTasks();
-  }, []);
   const handleAddTask = async () => {
     try {
       if (title.length == 0) {
-        return alert("Please enter task title");
+        return toast.error("Please enter task title");
       }
       // const user = JSON.stringify(loggedInUser)
-      const res = await axios.post("http://localhost:5000/tasks", {
+      const res = await axios.post("http://localhost:5000/api/tasks", {
         title: title,
-        id: id,
+        userId: user?.id,
       });
-      setTasks(res.data);
+      setTasks(res?.data?.data);
       setTitle("");
+      toast.success(res?.data?.message)
     } catch (err) {
+      toast.error("Unable to add task at the moment");
       console.error(err);
     }
     fetchTasks();
@@ -59,43 +65,43 @@ const Tasks = () => {
   const handleDelete = async (taskId: any) => {
     try {
       if (!taskId) {
-        return alert("Task does not exist");
+        return toast.error("Task does not exist");
       }
 
       if (window.confirm("Do you really want to delete the task?")) {
         const res = await axios.delete(
-          `http://localhost:5000/tasks/${taskId}`,
+          `http://localhost:5000/api/tasks/${taskId}`,
           {
-            params: { id },
             headers: {
-              Authorization: `Bearer ${token}`, // This goes to the middleware
+              Authorization: `Bearer ${token}`,
             },
           },
         );
 
-        console.log(res.data);
+        // console.log(res.data);
         setTitle("");
+        toast.success(res?.data?.message)
       } else {
         fetchTasks();
       }
     } catch (err) {
-      alert("Error occured while deleting the task");
+      toast.error("Error occured while deleting the task");
       console.error(err);
     }
     fetchTasks();
   };
   const handleEdit = async (taskId: any) => {
     try {
-      if (!taskId) return alert("Task does not exist");
-      if (!title.trim()) return alert("Title cannot be empty");
+      if (!taskId) return toast.error("Task does not exist");
+      if (!title.trim()) return toast.error("Title cannot be empty");
 
       const res = await axios.put(
-        `http://localhost:5000/tasks/${taskId}`,
+        `http://localhost:5000/api/tasks/${taskId}`,
         {
           title: title,
+          userId: user?.id,
         },
         {
-          params: { id },
           headers: {
             Authorization: `Bearer ${token}`, // This goes to the middleware
           },
@@ -105,25 +111,26 @@ const Tasks = () => {
       setTitle("");
       setEditId(null);
       fetchTasks();
+      toast.success(res?.data?.message)
 
       console.log(res.data);
     } catch (err) {
-      alert("Error occured while updating the task");
+      toast.error("Error occured while updating the task");
       console.error(err);
     }
   };
   const handleComplete = async (taskId: any) => {
     try {
-      if (!taskId) return alert("Task does not exist");
-      // if (!title.trim()) return alert("Title cannot be empty");
+      if (!taskId) return toast.error("Task does not exist");
+      // if (!title.trim()) return toast.error("Title cannot be empty");
 
       const res = await axios.put(
-        `http://localhost:5000/tasks/${taskId}`,
+        `http://localhost:5000/api/tasks/${taskId}`,
         {
           completed: true,
+          userId: user?.id
         },
         {
-          params: { id },
           headers: {
             Authorization: `Bearer ${token}`, // This goes to the middleware
           },
@@ -133,14 +140,17 @@ const Tasks = () => {
       setTitle("");
       setEditId(null);
       fetchTasks();
-      alert("Task marked as completed");
+      toast.success("Task marked as completed");
       console.log(res.data);
     } catch (err) {
-      alert("Error occured while updating the task");
+      toast.error("Error occured while updating the task");
       console.error(err);
     }
   };
 
+  useEffect(() => {
+    fetchTasks();
+  }, []);
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md xl:w-6/12 md:8/12">
@@ -165,9 +175,13 @@ const Tasks = () => {
             <div className="my-2">
               <h1 className="font-medium text-xl">Your Tasks</h1>
               {tasks.map((task: any) => (
-                <div key={task?.id} className="flex justify-between">
+                <div key={task?.taskid} className="flex justify-between">
                   <div className="m-2 mx-4 items-center flex gap-2">
-                    {task?.completed ?<MdCheck className="text-green-500 min-w-5"size={20}/> : <FcCancel className="min-w-5"size={20}/>}
+                    {task?.completed ? (
+                      <MdCheck className="text-green-500 min-w-5" size={20} />
+                    ) : (
+                      <FcCancel className="min-w-5" size={20} />
+                    )}
                     <li className="list-none text-lg">{task?.title}</li>
                   </div>
                   <div className="flex h-8">
@@ -175,7 +189,7 @@ const Tasks = () => {
                       className="m-2 cursor-pointer hover:scale-115 transition-all"
                       onClick={() => {
                         setTitle(task?.title);
-                        setEditId(task?.id);
+                        setEditId(task?.taskid);
                       }}
                       title="Edit Task"
                     >
@@ -183,7 +197,7 @@ const Tasks = () => {
                     </button>
                     <button
                       className="m-2 cursor-pointer hover:scale-115 transition-all"
-                      onClick={() => handleDelete(task?.id)}
+                      onClick={() => handleDelete(task?.taskid)}
                       title="Delete Task"
                     >
                       <MdDeleteForever size={25} />
@@ -191,7 +205,7 @@ const Tasks = () => {
                     <button
                       className="m-2 cursor-pointer hover:scale-115 transition-all"
                       onClick={() => {
-                        handleComplete(task?.id);
+                        handleComplete(task?.taskid);
                       }}
                       title={
                         task?.completed ? "Completed" : "Mark task as complete"

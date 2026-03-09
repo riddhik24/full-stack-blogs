@@ -2,7 +2,7 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 interface AuthState {
   token: string | null;
-  resUser: object | string | null;
+  resUser: any;
 }
 
 const initialState: AuthState = {
@@ -30,6 +30,7 @@ const authSlice = createSlice({
     },
     logout: (state) => {
       state.token = null;
+      state.resUser = null;
       localStorage.removeItem("token");
       localStorage.removeItem("loggedInUser");
     },

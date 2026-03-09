@@ -1,8 +1,9 @@
 import { useState, FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { setToken,setUser } from "../slices/authSlice";
+import { setToken, setUser } from "../slices/authSlice";
 import axios from "axios";
 import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -11,29 +12,31 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading,setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     try {
-        setLoading(true);
-      const res = await axios.post("http://localhost:5000/login", {
+      setLoading(true);
+      const res = await axios.post("http://localhost:5000/api/login", {
         email,
         password,
       });
 
-      dispatch(setToken(res.data.token));
-      console.log(res.data.resUser)
-      dispatch(setUser(res.data.resUser));
+      console.log(res);
+      dispatch(setToken(res?.data?.data?.token));
+      console.log(res?.data?.data?.user);
+      dispatch(setUser(res?.data?.data?.user));
       setLoading(false);
       navigate("/tasks");
+      toast.success("Logged in successfully")
     } catch (err: any) {
+      toast.error(err.response?.data?.message || "Login failed")
       setError(err.response?.data?.message || "Login failed");
-      setLoading(false)
+      setLoading(false);
     }
   };
-
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -43,9 +46,7 @@ const Login = () => {
         </h2>
 
         {error && (
-          <p className="text-red-500 text-sm mb-4 text-center">
-            {error}
-          </p>
+          <p className="text-red-500 text-sm mb-4 text-center">{error}</p>
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
