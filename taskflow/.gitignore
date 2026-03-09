@@ -29,3 +29,5 @@ Thumbs.db          # Windows specific file
 *.njsproj
 *.sln
 *.sw?
+
+.env
