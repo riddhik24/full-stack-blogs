@@ -1,30 +1,31 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { MdDeleteForever } from "react-icons/md";
-import { MdOutlineModeEdit } from "react-icons/md";
-import { IoCheckmarkDoneCircleOutline } from "react-icons/io5";
-import { IoCheckmarkDoneCircle } from "react-icons/io5";
-import { MdCheck } from "react-icons/md";
-import { FcCancel } from "react-icons/fc";
+import { CiFilter } from "react-icons/ci";
+import { MdFilterListAlt } from "react-icons/md";
+import { CiSearch } from "react-icons/ci";
 import { toast } from "react-toastify";
+import TaskList from "./TaskList";
 
 const Tasks = () => {
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState<any[]>([]);
   const [title, setTitle] = useState("");
   const [editId, setEditId] = useState(null);
-  const getUser = localStorage.getItem("loggedInUser");
+  const [showFilter, setShowFilter] = useState(false);
+  const [filter, setFilter] = useState("all");
+  const [filteredTasks, setFilteredTasks] = useState<any[]>([]);
+  const getUser = sessionStorage.getItem("loggedInUser");
+  const [currentPage, setCurrentPage] = useState(1);
+  const tasksPerPage = 5;
+
+  const indexOfLastTask = currentPage * tasksPerPage;
+  const indexOfFirstTask = indexOfLastTask - tasksPerPage;
 
   const user = getUser ? JSON.parse(getUser) : null;
 
-  const token = localStorage.getItem("token");
-  // console.log(tasks);
+  const token = sessionStorage.getItem("token");
+  // console.log(user);
   const navigate = useNavigate();
-
-  if (!user) {
-    toast.error("Please login first");
-    navigate("/login");
-  }
   const fetchTasks = async () => {
     // const { id } = user;
     try {
@@ -34,7 +35,9 @@ const Tasks = () => {
           params: { id: user?.id },
         },
       );
-      setTasks(res?.data?.data);
+      setTasks(res.data.data);
+      setFilteredTasks(res.data.data);
+
       toast.success(res?.data?.message);
       // console.log(res?.data?.data);
     } catch (err) {
@@ -42,6 +45,9 @@ const Tasks = () => {
     }
   };
 
+  const paginatedTasks = filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
+  const totalPages = Math.ceil(filteredTasks.length / tasksPerPage);
+  // console.log(filteredTasks)
   const handleAddTask = async () => {
     try {
       if (title.length == 0) {
@@ -54,7 +60,7 @@ const Tasks = () => {
       });
       setTasks(res?.data?.data);
       setTitle("");
-      toast.success(res?.data?.message)
+      toast.success(res?.data?.message);
     } catch (err) {
       toast.error("Unable to add task at the moment");
       console.error(err);
@@ -80,7 +86,7 @@ const Tasks = () => {
 
         // console.log(res.data);
         setTitle("");
-        toast.success(res?.data?.message)
+        toast.success(res?.data?.message);
       } else {
         fetchTasks();
       }
@@ -111,9 +117,9 @@ const Tasks = () => {
       setTitle("");
       setEditId(null);
       fetchTasks();
-      toast.success(res?.data?.message)
+      toast.success(res?.data?.message);
 
-      console.log(res.data);
+      // console.log(res.data);
     } catch (err) {
       toast.error("Error occured while updating the task");
       console.error(err);
@@ -128,7 +134,7 @@ const Tasks = () => {
         `http://localhost:5000/api/tasks/${taskId}`,
         {
           completed: true,
-          userId: user?.id
+          userId: user?.id,
         },
         {
           headers: {
@@ -141,7 +147,7 @@ const Tasks = () => {
       setEditId(null);
       fetchTasks();
       toast.success("Task marked as completed");
-      console.log(res.data);
+      // console.log(res.data);
     } catch (err) {
       toast.error("Error occured while updating the task");
       console.error(err);
@@ -149,78 +155,125 @@ const Tasks = () => {
   };
 
   useEffect(() => {
+    if (!user) {
+      toast.error("Please login first");
+      navigate("/login");
+      return;
+    }
+
     fetchTasks();
   }, []);
+
+  useEffect(() => {
+    const filteredTasks = Array.isArray(tasks)
+      ? tasks.filter((task) => {
+          if (filter === "completed") return task.completed;
+          if (filter === "pending") return !task.completed;
+          return true;
+        })
+      : [];
+
+    setFilteredTasks(filteredTasks);
+  }, [filter, tasks]);
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md xl:w-6/12 md:8/12">
-        <div className="text-center items-center flex">
+        {/* <div className="text-center items-center flex"> */}
+        <div className="flex items-center flex-wrap gap-2">
           <input
             type="text"
             placeholder="Enter Task"
-            className="m-2 p-2 border rounded-xl xl:w-10/12 h-8 focus:border-blue-200"
+            className="flex-1 border p-2 rounded-xl"
+            // className="m-2 p-2 border rounded-xl xl:w-8/12 h-8 focus:border-blue-200"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+            }}
           />
           <button
-            className="bg-black text-white text-sm xl:w-2/12 rounded-xl p-2 cursor-pointer hover:scale-105 transition-all"
+            className="bg-black text-white px-4 py-2 rounded-xl"
+            // className="bg-black text-white text-center justify-center flex gap-1 text-sm xl:w-2/12 rounded-xl mx-2 p-2 cursor-pointer hover:scale-105 transition-all"
             onClick={() => (editId ? handleEdit(editId) : handleAddTask())}
           >
             {editId ? "Update task" : "Add task"}
           </button>
+          {!editId && (
+            <button
+              className="bg-black text-white px-4 py-2 rounded-xl flex items-center gap-1"
+              // className="bg-black text-white text-center justify-center text-sm xl:w-2/12 rounded-xl p-2 mx-2 flex gap-1 cursor-pointer hover:scale-105 transition-all"
+              onClick={() => {
+                const filteredTasks = tasks.filter((task) =>
+                  task?.title.toLowerCase().includes(title.toLowerCase()),
+                );
+                setFilteredTasks(filteredTasks);
+              }}
+            >
+              Search <CiSearch className="place-self-center" size={22} />
+            </button>
+          )}
         </div>
 
         <div className="m-2">
           {tasks.length ? (
             <div className="my-2">
-              <h1 className="font-medium text-xl">Your Tasks</h1>
-              {tasks.map((task: any) => (
-                <div key={task?.taskid} className="flex justify-between">
-                  <div className="m-2 mx-4 items-center flex gap-2">
-                    {task?.completed ? (
-                      <MdCheck className="text-green-500 min-w-5" size={20} />
+              <div className="flex justify-between me-6">
+                <h1 className="font-medium text-xl">Your Tasks</h1>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowFilter(!showFilter)}
+                    className="p-2 hover:bg-gray-200 rounded"
+                  >
+                    {filter === "pending" || filter === "completed" ? (
+                      <MdFilterListAlt size={25} />
                     ) : (
-                      <FcCancel className="min-w-5" size={20} />
+                      <CiFilter size={25} />
                     )}
-                    <li className="list-none text-lg">{task?.title}</li>
-                  </div>
-                  <div className="flex h-8">
-                    <button
-                      className="m-2 cursor-pointer hover:scale-115 transition-all"
-                      onClick={() => {
-                        setTitle(task?.title);
-                        setEditId(task?.taskid);
-                      }}
-                      title="Edit Task"
-                    >
-                      <MdOutlineModeEdit size={25} />
-                    </button>
-                    <button
-                      className="m-2 cursor-pointer hover:scale-115 transition-all"
-                      onClick={() => handleDelete(task?.taskid)}
-                      title="Delete Task"
-                    >
-                      <MdDeleteForever size={25} />
-                    </button>
-                    <button
-                      className="m-2 cursor-pointer hover:scale-115 transition-all"
-                      onClick={() => {
-                        handleComplete(task?.taskid);
-                      }}
-                      title={
-                        task?.completed ? "Completed" : "Mark task as complete"
-                      }
-                      disabled={task?.completed === true}
-                    >
-                      {/* <MdOutlineDoneOutline size={25} /> */}
-                      {task?.completed ? (
-                        <IoCheckmarkDoneCircle size={25} />
-                      ) : (
-                        <IoCheckmarkDoneCircleOutline size={25} />
-                      )}
-                    </button>
-                  </div>
+                  </button>
+
+                  {showFilter && (
+                    <div className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded border">
+                      <button
+                        onClick={() => {
+                          setFilter("all");
+                          setShowFilter(false);
+                        }}
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                      >
+                        All Tasks
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setFilter("completed");
+                          setShowFilter(false);
+                        }}
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                      >
+                        Completed
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setFilter("pending");
+                          setShowFilter(false);
+                        }}
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                      >
+                        Pending
+                      </button>
+                    </div>
+                  )}
                 </div>
+              </div>
+              {paginatedTasks.map((task: any) => (
+                <TaskList
+                  key={task.taskid}
+                  task={task}
+                  setTitle={setTitle}
+                  setEditId={setEditId}
+                  handleDelete={handleDelete}
+                  handleComplete={handleComplete}
+                />
               ))}
             </div>
           ) : (
@@ -228,6 +281,35 @@ const Tasks = () => {
               No task found.
             </h1>
           )}
+          <div className="flex justify-center gap-2 mt-4">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              className="px-3 py-1 bg-gray-200 rounded"
+            >
+              Prev
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-3 py-1 rounded ${
+                  currentPage === i + 1 ? "bg-black text-white" : "bg-gray-200"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+
+            <button
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              className="px-3 py-1 bg-gray-200 rounded"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>

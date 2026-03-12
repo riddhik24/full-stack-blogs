@@ -6,8 +6,8 @@ interface AuthState {
 }
 
 const initialState: AuthState = {
-  token: localStorage.getItem("token"),
-  resUser: localStorage.getItem("loggedInUser"),
+  token: sessionStorage.getItem("token"),
+  resUser: sessionStorage.getItem("loggedInUser"),
 };
 
 const authSlice = createSlice({
@@ -16,23 +16,23 @@ const authSlice = createSlice({
   reducers: {
     setToken: (state, action: PayloadAction<string>) => {
       state.token = action.payload;
-      localStorage.setItem("token", action.payload);
+      sessionStorage.setItem("token", action.payload);
     },
     setUser: (state, action: PayloadAction<string | object>) => {
       state.resUser = action.payload;
-      localStorage.setItem("loggedInUser", JSON.stringify(action.payload));
+      sessionStorage.setItem("loggedInUser", JSON.stringify(action.payload));
     },
     getUser: () => {
-      const data = localStorage.getItem("loggedInUser");
+      const data = sessionStorage.getItem("loggedInUser");
       // Check if data exists, then parse and return it
       return data ? JSON.parse(data) : {};
-      // JSON.stringify(localStorage.getItem("loggedInUser"));
+      // JSON.stringify(sessionStorage.getItem("loggedInUser"));
     },
     logout: (state) => {
       state.token = null;
       state.resUser = null;
-      localStorage.removeItem("token");
-      localStorage.removeItem("loggedInUser");
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("loggedInUser");
     },
   },
 });

@@ -2,13 +2,11 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 
 export default function Header() {
-  // const getUser = localStorage.getItem("loggedInUser");
 
-  const user = useSelector((state:any)=>state.auth.resUser)
+  const users = useSelector((state:any)=>state.auth.resUser)
 
-  // const user = JSON.parse(users)
+  const user = JSON.parse(users)
 
-  // console.log(user)
   return (
     <div className="flex bg-blue-50 justify-between mx-2 py-2 items-center rounded-2xl drop-shadow-2xl">
       <div className="flex items-center gap-3">
