@@ -39,7 +39,14 @@ const useChatStore = create((set, get) => ({
   sendMessage: async (id, text) => {
     try {
       const res = await axiosInstane.post("/message/send/" + id, { text });
-      set({ messages: [...get().messages, res.data.newMessages] });
+      // set({ messages: [...get().messages, res.data.newMessages] });
+      const message = res.data.data;
+
+      // if (!message) return; // 🔥 safety
+
+      set({
+        messages: [...get().messages, message],
+      });
     } catch (err) {
       toast.error("Error sending message");
       console.error("Error sending message", err);
@@ -62,14 +69,15 @@ const useChatStore = create((set, get) => ({
     socket.off("newMessages");
 
     socket.on("newMessages", (newMessage) => {
+      if (!newMessage) return;
       // Only add message if it belongs to the currently open chat
       const isMessageFromSelectedUser =
         newMessage.senderId === selectedUser._id;
       if (!isMessageFromSelectedUser) return;
 
-      set({
-        messages: [...get().messages, newMessage],
-      });
+      set((state) => ({
+        messages: [...state.messages, newMessage],
+      }));
     });
   },
 

@@ -75,6 +75,7 @@ export const MessageContainer = () => {
           </div>
         ) : messages?.length > 0 ? (
           messages.map((message) => {
+            
             const isMe =
               message?.senderId === authUser?._id ||
               message?.senderId === authUser?.data?._id;
@@ -87,7 +88,7 @@ export const MessageContainer = () => {
                 <div
                   className={`max-w-[80%] p-3 rounded-2xl shadow-md ${isMe ? "bg-blue-600 text-white rounded-tr-none" : "bg-white text-gray-900 border border-gray-200 rounded-tl-none"}`}
                 >
-                  <p className="text-sm sm:text-base font-medium leading-normal break-words">
+                  <p className="text-sm sm:text-base font-medium leading-normal wrap-break-word">
                     {message?.text}
                   </p>
                   <time
