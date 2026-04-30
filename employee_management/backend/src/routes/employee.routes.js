@@ -6,7 +6,7 @@ import {
   getEmployeeByDepartment,
   getEmployeeById,
   updateEmployee,
-} from "../models/employee.model";
+} from "../controllers/employee.controller.js";
 
 const router = express.Router();
 

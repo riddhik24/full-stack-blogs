@@ -19,7 +19,7 @@ export const createPayrollService = async (
   return result.rows[0];
 };
 
-export const getPayrollByEmployeeService = async (employee_id) => {
+export const getPayrollByEmployeeIdService = async (employee_id) => {
   const result = await pool.query(
     `SELECT *
      FROM payroll

@@ -1,9 +1,9 @@
 import pool from "../config/db.js";
 
-const createLeaveRequestTable = async (next) => {
+const createLeaveRequestTable = async () => {
   const queryText = `CREATE TABLE IF NOT EXISTS leave_requests (
     id SERIAL PRIMARY KEY,
-    employee_id INT REFERENCES employees(id),
+    employee_id INT REFERENCES employee(id),
     leave_type VARCHAR(50),
     start_date DATE,
     end_date DATE,
@@ -16,7 +16,7 @@ const createLeaveRequestTable = async (next) => {
     await pool.query(queryText);
     console.log("Leave requests table created.");
   } catch (err) {
-    next(err);
+    console.log(err);
   }
 };
 

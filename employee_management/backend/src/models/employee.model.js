@@ -21,7 +21,7 @@ const createEmployeeService = async (
     department_id,
     position,
     joining_date,
-    salary VALUES($1,$2,$3,$4,$5,$6,$7)`,
+    salary) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
     [
       first_name,
       last_name,
@@ -42,7 +42,7 @@ const getEmployeeByIdService = async (id) => {
 
 const getAllEmployeesService = async () => {
   const result = await pool.query("SELECT * FROM employee");
-  return result.rows[0];
+  return result.rows;
 };
 
 const updateEmployeeService = async (

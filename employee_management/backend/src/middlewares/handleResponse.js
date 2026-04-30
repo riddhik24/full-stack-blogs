@@ -1,7 +1,9 @@
-export default handleResponse = (res, status, message, data = null) => {
+const handleResponse = (res, status, message, data = null) => {
   res.status(status).json({
     status,
     message,
     data,
   });
 };
+
+export default handleResponse;

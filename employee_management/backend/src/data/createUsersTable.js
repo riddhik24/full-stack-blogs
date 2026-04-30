@@ -1,6 +1,6 @@
 import pool from "../config/db.js";
 
-const createUsersTable = async (next) => {
+const createUsersTable = async () => {
   const queryText = `CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(100) UNIQUE NOT NULL,
@@ -13,7 +13,7 @@ const createUsersTable = async (next) => {
     await pool.query(queryText);
     console.log("Users Table Created");
   } catch (err) {
-    next(err);
+    console.log(err);
   }
 };
 
